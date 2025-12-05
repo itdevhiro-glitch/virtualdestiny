@@ -2,7 +2,7 @@
 // Created by Hiro
 
 import { db, auth } from './firebase-config.js';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, where } from "firebase/firestore";
+import { ref, push, onValue, query, orderByChild, update } from "firebase/database";
 
 const eventForm = document.getElementById('event-form');
 const activeEventTableBody = document.getElementById('active-event-table-body');
@@ -31,14 +31,14 @@ eventForm.addEventListener('submit', async (e) => {
     }
 
     try {
-        await addDoc(collection(db, "events"), {
+        await push(ref(db, 'events'), {
             name,
-            date: new Date(dateStr),
+            date: new Date(dateStr).toISOString(),
             initialBudget: budget,
             currentExpense: 0,
             status: 'scheduled',
             details,
-            createdAt: serverTimestamp(),
+            createdAt: new Date().toISOString(),
             moderator: auth.currentUser.email
         });
         showEventMessage(`Event "${name}" scheduled successfully!`, false);
@@ -49,20 +49,25 @@ eventForm.addEventListener('submit', async (e) => {
     }
 });
 
-const activeEventsQuery = query(
-    collection(db, "events"), 
-    where("status", "!=", "completed"), 
-    orderBy("status", "asc"), 
-    orderBy("date", "asc")
-);
+const eventsRef = ref(db, 'events');
+const activeEventsQuery = query(eventsRef, orderByChild('date'));
 
-onSnapshot(activeEventsQuery, (snapshot) => {
+onValue(activeEventsQuery, (snapshot) => {
     activeEventTableBody.innerHTML = '';
     
-    snapshot.docs.forEach(docSnap => {
-        const event = docSnap.data();
-        const eventId = docSnap.id;
-        const date = event.date?.toDate().toLocaleDateString('id-ID') || 'N/A';
+    let activeEvents = [];
+    snapshot.forEach(childSnapshot => {
+        const event = childSnapshot.val();
+        if (event.status !== 'completed' && event.status !== 'cancelled') {
+            activeEvents.push({ key: childSnapshot.key, ...event });
+        }
+    });
+
+    activeEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    activeEvents.forEach(event => {
+        const eventId = event.key;
+        const date = new Date(event.date).toLocaleDateString('id-ID');
         const budgetLeft = event.initialBudget - (event.currentExpense || 0);
 
         activeEventTableBody.innerHTML += `
@@ -83,7 +88,7 @@ onSnapshot(activeEventsQuery, (snapshot) => {
         btn.addEventListener('click', handleUpdateStatus);
     });
 
-    if (snapshot.empty) {
+    if (activeEvents.length === 0) {
         activeEventTableBody.innerHTML = '<tr><td colspan="5">No active or upcoming events found.</td></tr>';
     }
 });
@@ -94,7 +99,7 @@ async function handleUpdateStatus(e) {
 
     if (confirm(`Are you sure you want to change the status of this event to ${newStatus.toUpperCase()}?`)) {
         try {
-            await updateDoc(doc(db, "events", eventId), {
+            await update(ref(db, `events/${eventId}`), {
                 status: newStatus
             });
             showEventMessage(`Event status updated to ${newStatus}.`, false);
