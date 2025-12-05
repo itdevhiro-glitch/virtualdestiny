@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VD Panel - Finance Control</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="galaxy-theme">
+    <nav class="navbar">
+        <div class="logo">VD Moderator Panel</div>
+        <div class="navbar-links">
+            <a href="dashboard.html">🛰️ Dashboard</a>
+            <a href="finance.html" class="active">💰 Finance Control</a>
+            <a href="event-control.html">📅 Event Management</a>
+            <a href="moderator.html" id="admin-link" style="display:none;">🔑 Moderator Control</a>
+            <a href="#" id="logout-btn">🔴 Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-layout">
+        <h1>💰 Finance Control - Transaction Log</h1>
+        
+        <div class="grid-2">
+            <div class="card">
+                <h2>➕ Add New Transaction</h2>
+                <form id="finance-form">
+                    <input type="text" id="trans-description" placeholder="Description (e.g., Event Prize Pool / Donation from X)" required>
+                    <input type="number" id="trans-amount" placeholder="Amount (IDR)" required min="1000">
+                    <select id="trans-type" required>
+                        <option value="">-- Select Type --</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                    <textarea id="trans-notes" placeholder="Additional Notes (Optional)"></textarea>
+                    <button type="submit" class="btn primary-btn">Record Transaction</button>
+                    <p id="finance-message" class="message"></p>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>📈 Financial Summary</h2>
+                <p>Current Total Balance: <strong id="current-balance">Loading...</strong></p>
+                <p>Total Income YTD: <strong id="total-income-ytd">...</strong></p>
+                <p>Total Expense YTD: <strong id="total-expense-ytd">...</strong></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📜 Full Transaction History</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Moderator</th>
+                    </tr>
+                </thead>
+                <tbody id="transaction-table-body">
+                    <tr><td colspan="5">Loading transaction data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { logout, auth, onAuthStateChanged, checkAdminRole } from './assets/js/auth.js';
+        
+        document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const isAdmin = await checkAdminRole(user);
+                if (isAdmin) {
+                    document.getElementById('admin-link').style.display = 'block';
+                }
+            }
+        });
+        
+        import './assets/js/finance.js'; 
+    </script>
+</body>
+</html>

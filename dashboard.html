@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VD Panel - Dashboard</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="galaxy-theme">
+    <nav class="navbar">
+        <div class="logo">VD Moderator Panel</div>
+        <div class="navbar-links">
+            <a href="dashboard.html" class="active">🛰️ Dashboard</a>
+            <a href="finance.html">💰 Finance Control</a>
+            <a href="event-control.html">📅 Event Management</a>
+            <a href="moderator.html" id="admin-link" style="display:none;">🔑 Moderator Control</a>
+            <a href="#" id="logout-btn">🔴 Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-layout">
+        <h1>✨ Moderator Dashboard - System Overview</h1>
+        <p>Welcome back, <span id="user-display-name">Loading...</span>. Initiating system check...</p>
+
+        <div class="grid-3">
+            <div class="card">
+                <h2>📊 Financial Overview</h2>
+                <p>Total Balance: <strong id="total-balance">Calculating...</strong></p>
+                <p>Monthly Income: <strong id="monthly-income">...</strong></p>
+                <p>Monthly Expense: <strong id="monthly-expense">...</strong></p>
+            </div>
+            
+            <div class="card">
+                <h2>📢 Discord Status</h2>
+                <p>Active Users: <strong id="discord-active-users">N/A</strong></p>
+                <p>Events in Progress: <strong id="discord-events-in-progress">N/A</strong></p>
+                <p>Latest Mod Log: <strong id="discord-mod-log">N/A</strong></p>
+            </div>
+
+            <div class="card">
+                <h2>⭐ Upcoming Event</h2>
+                <p id="next-event-name">Next Event: **Loading...**</p>
+                <p id="next-event-date">Date: N/A</p>
+                <p id="next-event-budget">Budget Used: N/A</p>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h2>📈 Recent Financial Activity</h2>
+                <ul id="recent-finance-list" class="finance-list">
+                    <li>Loading recent transactions...</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h2>📜 Community Tasks & Announcements</h2>
+                <ul id="task-list">
+                    <li>Review new member applications.</li>
+                    <li>Prepare Q4 finance report.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { logout, auth, onAuthStateChanged, checkAdminRole } from './assets/js/auth.js';
+        
+        document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('user-display-name').textContent = user.email.split('@')[0];
+                const isAdmin = await checkAdminRole(user);
+                if (isAdmin) {
+                    document.getElementById('admin-link').style.display = 'block';
+                }
+            }
+        });
+        
+        import './assets/js/dashboard.js'; 
+    </script>
+</body>
+</html>

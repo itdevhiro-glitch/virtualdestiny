@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VD Panel - Event Control</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="galaxy-theme">
+    <nav class="navbar">
+        <div class="logo">VD Moderator Panel</div>
+        <div class="navbar-links">
+            <a href="dashboard.html">🛰️ Dashboard</a>
+            <a href="finance.html">💰 Finance Control</a>
+            <a href="event-control.html" class="active">📅 Event Management</a>
+            <a href="moderator.html" id="admin-link" style="display:none;">🔑 Moderator Control</a>
+            <a href="#" id="logout-btn">🔴 Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-layout">
+        <h1>📅 Event Control - Planning & Budgeting</h1>
+        
+        <div class="grid-2">
+            <div class="card">
+                <h2>✏️ Create New Event</h2>
+                <form id="event-form">
+                    <input type="text" id="event-name" placeholder="Event Name (e.g., Space Race 2026)" required>
+                    <input type="date" id="event-date" required>
+                    <input type="number" id="event-budget" placeholder="Initial Budget Allocation (IDR)" required min="0">
+                    <textarea id="event-details" placeholder="Detailed Event Description"></textarea>
+                    <button type="submit" class="btn primary-btn">Schedule Event</button>
+                    <p id="event-message" class="message"></p>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>🗓️ Active & Upcoming Events</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Budget Left</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="active-event-table-body">
+                        <tr><td colspan="5">Loading events...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { logout, auth, onAuthStateChanged, checkAdminRole } from './assets/js/auth.js';
+        
+        document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const isAdmin = await checkAdminRole(user);
+                if (isAdmin) {
+                    document.getElementById('admin-link').style.display = 'block';
+                }
+            }
+        });
+        
+        import './assets/js/event.js'; 
+    </script>
+</body>
+</html>

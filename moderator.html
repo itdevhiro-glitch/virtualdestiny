@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VD Panel - Moderator Control (ADMIN)</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="galaxy-theme">
+    <nav class="navbar">
+        <div class="logo">VD Moderator Panel</div>
+        <div class="navbar-links">
+            <a href="dashboard.html">🛰️ Dashboard</a>
+            <a href="finance.html">💰 Finance Control</a>
+            <a href="event-control.html">📅 Event Management</a>
+            <a href="moderator.html" id="admin-link" class="active">🔑 Moderator Control</a>
+            <a href="#" id="logout-btn">🔴 Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-layout">
+        <h1>🔑 Moderator Control - User & Role Management</h1>
+        <p id="admin-status" class="message error" style="display:none;">Access Restricted: Admin privileges required.</p>
+        
+        <div class="card" id="moderator-card" style="display:none;">
+            <h2>👤 Registered Moderators</h2>
+            <p>Total Moderators: <strong id="mod-count">Loading...</strong></p>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Username</th>
+                        <th>Current Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="moderator-table-body">
+                </tbody>
+            </table>
+            <p id="mod-message" class="message"></p>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { logout, auth, onAuthStateChanged, checkAdminRole } from './assets/js/auth.js';
+        import { db } from './assets/js/firebase-config.js';
+        
+        document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+
+        onAuthStateChanged(auth, async (user) => {
+            const adminStatusEl = document.getElementById('admin-status');
+            const modCardEl = document.getElementById('moderator-card');
+            
+            if (user) {
+                const isAdmin = await checkAdminRole(user);
+                if (isAdmin) {
+                    modCardEl.style.display = 'block';
+                    document.getElementById('admin-link').style.display = 'block';
+                    import('./assets/js/moderator.js');
+                } else {
+                    adminStatusEl.style.display = 'block';
+                    adminStatusEl.textContent = 'Access Denied. Only Admin@vdcommunity.com can view this page.';
+                }
+            } else {
+                adminStatusEl.style.display = 'block';
+                adminStatusEl.textContent = 'You must log in to view this page.';
+            }
+        });
+    </script>
+</body>
+</html>
