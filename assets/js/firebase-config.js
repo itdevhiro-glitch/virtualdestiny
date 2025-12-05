@@ -3,11 +3,11 @@
 
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; 
+import { getDatabase } from "firebase/database";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDbfyMoe0CKmSc2V8naelne2CIUPX214J0",
+  apiKey: "AIzaSyDbfyMoe0CKdSc2V8naelne2CIUPX214J0",
   authDomain: "vdcommunity-33479.firebaseapp.com",
   projectId: "vdcommunity-33479",
   storageBucket: "vdcommunity-33479.firebasestorage.app",
@@ -19,6 +19,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = getDatabase(app);
 
 export { app, auth, db, analytics };
