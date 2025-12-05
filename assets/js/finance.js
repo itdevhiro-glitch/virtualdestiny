@@ -2,7 +2,7 @@
 // Created by Hiro
 
 import { db, auth } from './firebase-config.js';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { ref, push, onValue, query, orderByChild, update } from "firebase/database";
 
 const financeForm = document.getElementById('finance-form');
 const transactionTableBody = document.getElementById('transaction-table-body');
@@ -35,34 +35,42 @@ financeForm.addEventListener('submit', async (e) => {
     }
 
     try {
-        await addDoc(collection(db, "finance"), {
+        await push(ref(db, 'finance'), {
             description,
             amount,
             type,
             notes,
-            date: serverTimestamp(),
+            date: new Date().toISOString(),
             moderator: moderatorEmail
         });
         showFinanceMessage('Transaction recorded successfully!', false);
         financeForm.reset();
     } catch (error) {
-        console.error("Error adding document: ", error);
+        console.error("Error adding transaction: ", error);
         showFinanceMessage('Failed to record transaction: ' + error.message, true);
     }
 });
 
-const financeQuery = query(collection(db, "finance"), orderBy("date", "desc"));
+const financeRef = ref(db, 'finance');
+const financeQuery = query(financeRef, orderByChild('date'));
 
-onSnapshot(financeQuery, (snapshot) => {
+onValue(financeRef, (snapshot) => {
     let currentBalance = 0;
     let totalIncomeYTD = 0;
     let totalExpenseYTD = 0;
     const currentYear = new Date().getFullYear();
     transactionTableBody.innerHTML = '';
     
-    snapshot.docs.forEach(docSnap => {
-        const item = docSnap.data();
-        const date = item.date?.toDate().toLocaleDateString('id-ID') || 'N/A';
+    let transactions = [];
+    snapshot.forEach(childSnapshot => {
+        transactions.push(childSnapshot.val());
+    });
+
+    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    transactions.forEach(item => {
+        const itemDate = new Date(item.date);
+        const dateString = itemDate.toLocaleDateString('id-ID');
         const amountDisplay = item.type === 'income' 
             ? `<span class="income-tag">+${formatCurrency(item.amount)}</span>`
             : `<span class="expense-tag">-${formatCurrency(item.amount)}</span>`;
@@ -73,7 +81,7 @@ onSnapshot(financeQuery, (snapshot) => {
             currentBalance -= item.amount;
         }
 
-        if (item.date && item.date.toDate().getFullYear() === currentYear) {
+        if (itemDate.getFullYear() === currentYear) {
             if (item.type === 'income') {
                 totalIncomeYTD += item.amount;
             } else {
@@ -83,7 +91,7 @@ onSnapshot(financeQuery, (snapshot) => {
 
         transactionTableBody.innerHTML += `
             <tr>
-                <td>${date}</td>
+                <td>${dateString}</td>
                 <td>${item.description}</td>
                 <td>${item.type}</td>
                 <td>${amountDisplay}</td>
