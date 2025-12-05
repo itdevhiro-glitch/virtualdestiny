@@ -8,7 +8,7 @@ import {
     signOut,
     onAuthStateChanged 
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { ref, set, get, child } from "firebase/database";
 
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
@@ -43,11 +43,12 @@ registerForm?.addEventListener('submit', async (e) => {
     
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", userCredential.user.uid), {
+        
+        await set(ref(db, 'users/' + userCredential.user.uid), {
             username: username,
             email: email,
             role: 'moderator',
-            createdAt: new Date()
+            createdAt: new Date().toISOString()
         });
 
         showMessage("Registration successful! Redirecting...", false);
@@ -87,9 +88,8 @@ const logout = async () => {
 
 const checkAdminRole = async (user) => {
     if (!user) return false;
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    return userDoc.exists() && userDoc.data().role === 'admin';
+    const userSnapshot = await get(child(ref(db), `users/${user.uid}/role`));
+    return userSnapshot.exists() && userSnapshot.val() === 'admin';
 }
 
-
-export { logout, auth, db, onAuthStateChanged, getDoc, doc, checkAdminRole };
+export { logout, auth, db, onAuthStateChanged, ref, get, child, set, checkAdminRole };
